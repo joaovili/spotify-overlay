@@ -1224,7 +1224,7 @@
               <tr><td><code>hotkeyToggle</code></td><td>ex.: <code>Ctrl+Alt+H</code></td><td>atalho de mostrar/esconder; vazio desativa</td></tr>
               <tr><td><code>alwaysOnTop</code></td><td><code>true</code> · <code>false</code></td><td>mantém acima das outras janelas</td></tr>
               <tr><td><code>closeHidesToTray</code></td><td><code>true</code> · <code>false</code></td><td>o X esconde em vez de encerrar</td></tr>
-              <tr><td><code>startWithWindows</code></td><td><code>true</code> · <code>false</code></td><td>atalho na pasta Inicializar; desligado por padrão</td></tr>
+              <tr><td><code>startWithWindows</code></td><td><code>true</code> · <code>false</code></td><td>entrada em <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</code>; desligado por padrão</td></tr>
               <tr><td><code>player</code></td><td><code>auto</code> · <code>spotify</code> · <code>spotifast</code></td><td>player controlado; <code>auto</code> prefere quem está tocando</td></tr>
             </tbody>
           </table>
@@ -1364,7 +1364,7 @@
           </li>
           <li>
             <b>Se o Windows avisar</b>
-            <p>“O Windows protegeu o computador” aparece porque o exe não tem assinatura de código: clique em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>. O app não abre conexão de rede — só conversa com a API de mídia do próprio Windows.</p>
+            <p>“O Windows protegeu o computador” aparece porque o exe não tem assinatura de código: clique em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>. O controle de mídia é local (SMTC), sem login, token ou API do Spotify.</p>
           </li>
           <li>
             <b>Deixe o Spotify ou Spotifast tocando</b>
@@ -1388,8 +1388,9 @@
           <div><span>total</span><span>~3 MB</span></div>
         </div>
         <p class="fine">
-          Só o exe e o config que ele cria ao lado. Nenhuma entrada no registro: o início
-          com o Windows, se você marcar, é um atalho na pasta Inicializar.
+          Só o exe e o config que ele cria ao lado. O início com o Windows, se você marcar,
+          é uma entrada em <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</code>,
+          que pode ser desligada nas Configurações.
         </p>
       </div>
     </div>

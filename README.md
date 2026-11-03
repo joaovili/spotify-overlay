@@ -126,7 +126,7 @@ gravavel). As chaves sao as mesmas das versoes anteriores:
 
 ## Desempenho (macOS, release arm64)
 
-- Binario: ~4 MB; `.app`: ~4 MB; zip universal: ~4 MB.
+- Binario arm64: ~4 MB; `.app` universal: ~10 MB; zip universal: ~5,5 MB.
 - RSS em idle com o painel aberto: ~90 MB.
 - A versao Tauri/WebView media ~135 MB; a Swift/AppKit antiga, ~25 MB.
 

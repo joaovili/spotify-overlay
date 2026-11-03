@@ -31,8 +31,8 @@ scripts          geracao dos icones
 ```
 
 O mesmo binario Tauri atende as duas plataformas: o backend de midia e escolhido em tempo
-de compilacao e a interface e a mesma. O resultado fica pequeno (~3 MB no Windows,
-~1,4 MB o zip universal do macOS) e usa o WebView do sistema.
+de compilacao e a interface e a mesma. O resultado fica pequeno (~3 MB por plataforma)
+e usa o WebView do sistema.
 
 ## Desenvolvimento
 

@@ -1399,7 +1399,7 @@
     <div class="band__head">
       <h2>Baixar para macOS</h2>
       <p class="band__note">
-        App em Rust + Tauri, universal (Apple Silicon e Intel), 1,4 MB no zip. Controla
+        App em Rust + Tauri, universal (Apple Silicon e Intel), ~3 MB no zip. Controla
         Spotify e Spotifast; os três atalhos são graváveis pressionando as teclas nas
         Configurações. Fora da Mac App Store e sem assinatura Developer ID, então o Gatekeeper
         pede um clique extra na primeira abertura.
@@ -1415,7 +1415,7 @@
         </div>
         <ul class="dl__meta">
           <li>versão 1.2.0</li>
-          <li>1,4 MB</li>
+          <li>~3 MB</li>
           <li>macOS 13 ou superior</li>
           <li>arm64 + x86_64</li>
         </ul>
@@ -1451,7 +1451,7 @@
         <p class="eyebrow" style="margin-top:26px">Diferenças em relação ao Windows</p>
         <ul class="limits">
           <li><div><b>A permissão é pedida de novo a cada atualização.</b> A assinatura é ad-hoc, então o macOS trata cada build como um app diferente.</div></li>
-          <li><div><b>A capa usa a rede.</b> O Spotify entrega a arte como URL; o app baixa só de <code>i.scdn.co</code> e guarda em cache de até 50 MB.</div></li>
+          <li><div><b>A capa usa a rede.</b> O Spotify entrega a arte como URL e o WebView do sistema carrega a imagem só de <code>i.scdn.co</code>.</div></li>
           <li><div><b>Sem fila e sem Spotify Connect.</b> O AppleScript do app não expõe a fila nem controla outros dispositivos.</div></li>
         </ul>
       </div>

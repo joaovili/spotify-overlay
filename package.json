@@ -1,0 +1,15 @@
+{
+  "name": "spotify-overlay",
+  "private": true,
+  "version": "1.2.0",
+  "description": "Overlay leve para controlar o Spotify no macOS e no Windows",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "test": "cargo test"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

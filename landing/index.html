@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spotify Overlay — controle do Spotify num canto da tela</title>
+<style>
+  /* Tokens do DESIGN.md. Gerados por @google/design.md a partir de DESIGN.md
+     (theme.css): não editar valores aqui, editar DESIGN.md e rodar
+     landing/sync-tokens.py. */
+  :root {
+    --color-primary: #1db954;
+    --color-primary-hover: #23c95c;
+    --color-on-primary: #0b0d0e;
+    --color-accent-soft: #4fd37f;
+    --color-background: #0f1113;
+    --color-background-raised: #14171a;
+    --color-surface: #1b1f22;
+    --color-text: #edeff0;
+    --color-text-muted: #a9b1b6;
+    --color-text-subtle: #8b9499;
+    --color-border: #343b40;
+    --color-border-soft: #23282b;
+    --color-panel: #181818;
+    --color-panel-text: #f5f5f5;
+    --color-panel-muted: #969696;
+    --color-panel-hover: #2c2c2c;
+    --color-panel-track: #404040;
+    --color-panel-cover-fallback: #282828;
+    --color-code-background: #0a0c0d;
+    --font-display-xl: "Bahnschrift SemiCondensed";
+    --font-display-md: "Bahnschrift SemiCondensed";
+    --font-display-sm: "Bahnschrift SemiCondensed";
+    --font-body-md: "Segoe UI Variable Text";
+    --font-body-sm: "Segoe UI Variable Text";
+    --font-mono-sm: "Cascadia Mono";
+    --font-mono-xs: "Cascadia Mono";
+    --font-panel-title: "system-ui";
+    --font-panel-artist: "system-ui";
+    --font-panel-album: "system-ui";
+    --font-panel-time: "ui-monospace";
+    --text-display-xl: 66px;
+    --text-display-md: 36px;
+    --text-display-sm: 21px;
+    --text-body-md: 17px;
+    --text-body-sm: 14px;
+    --text-mono-sm: 12.5px;
+    --text-mono-xs: 12px;
+    --text-panel-title: 14px;
+    --text-panel-artist: 11px;
+    --text-panel-album: 10px;
+    --text-panel-time: 9.5px;
+    --tracking-display-xl: -0.005em;
+    --tracking-mono-xs: 0.06em;
+    --font-weight-display-xl: 600;
+    --font-weight-display-md: 600;
+    --font-weight-display-sm: 600;
+    --font-weight-body-md: 400;
+    --font-weight-body-sm: 400;
+    --font-weight-mono-sm: 400;
+    --font-weight-mono-xs: 400;
+    --font-weight-panel-title: 600;
+    --font-weight-panel-artist: 400;
+    --font-weight-panel-album: 400;
+    --font-weight-panel-time: 400;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 16px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --display: var(--font-display-xl), "Bahnschrift", "Segoe UI", sans-serif;
+    --body: var(--font-body-md), "Segoe UI", system-ui, sans-serif;
+    --mono: var(--font-mono-sm), "Consolas", ui-monospace, monospace;
+    --edge: clamp(18px, 4vw, 64px);
+    --rule: 1px solid var(--color-border);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--body);
+    font-size: var(--text-body-md);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  .wrap {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-inline: var(--edge);
+  }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--color-background) 88%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom: var(--rule);
+  }
+  .bar__inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-block: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--display);
+    font-size: 20px;
+    letter-spacing: .01em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .brand__mark {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary);
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+  .brand__mark svg { width: 12px; height: 12px; }
+  .bar__nav {
+    display: none;
+    gap: 22px;
+    margin-left: auto;
+    font-size: 14px;
+  }
+  .bar__nav a {
+    text-decoration: none;
+    color: var(--color-text-muted);
+    padding-block: 4px;
+    border-bottom: 1px solid transparent;
+  }
+  .bar__nav a:hover { color: var(--color-text); border-bottom-color: var(--color-text); }
+  .bar__cta {
+    margin-left: auto;
+    font-size: 14px;
+  }
+  @media (min-width: 900px) {
+    .bar__nav { display: flex; }
+    .bar__cta { margin-left: 8px; }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, transform .15s ease;
+  }
+  .btn:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--color-accent-soft); outline-offset: 3px; }
+  .btn--ghost {
+    background: transparent;
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+  .btn--ghost:hover { background: rgba(255, 255, 255, .06); border-color: var(--color-text-subtle); }
+  .btn--sm { min-height: 38px; padding: 0 14px; font-size: 13px; }
+
+  /* ---------- hero ---------- */
+  .hero { padding-block: clamp(34px, 6vw, 74px) clamp(28px, 4vw, 48px); }
+  .hero__grid {
+    display: grid;
+    gap: clamp(28px, 4vw, 52px);
+    align-items: start;
+  }
+  @media (min-width: 1040px) {
+    .hero__grid { grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr); }
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    color: var(--color-text-subtle);
+    text-transform: uppercase;
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(38px, 5.4vw, var(--text-display-xl));
+    line-height: 0.98;
+    letter-spacing: -0.005em;
+    margin: 0 0 20px;
+    max-width: 16ch;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--color-accent-soft);
+  }
+
+  .lede {
+    font-size: clamp(17px, 1.6vw, 19px);
+    color: var(--color-text-muted);
+    max-width: 46ch;
+    margin: 0 0 26px;
+  }
+  .lede strong { color: var(--color-text); font-weight: 600; }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: var(--text-mono-sm);
+    color: var(--color-text-muted);
+  }
+  .specs li { display: flex; align-items: center; gap: 8px; }
+  .specs li::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border: 1px solid var(--color-text-subtle);
+    border-radius: 50%;
+  }
+
+  /* ---------- blueprint stage ---------- */
+  .stage {
+    position: relative;
+    border: var(--rule);
+    background:
+      repeating-linear-gradient(to right, rgba(255,255,255,.05) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.05) 0 1px, transparent 1px 8px),
+      var(--color-background-raised);
+    border-radius: var(--radius-lg);
+    padding: 26px 26px 30px;
+    overflow: hidden;
+  }
+  .stage__label {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--color-text-subtle);
+    background: var(--color-background-raised);
+    padding-inline: 6px;
+  }
+  /* distant window silhouette so "floats over your work" reads */
+  .ghost {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.025);
+    min-height: 344px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ghost__bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 9px;
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+  .ghost__bar i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    display: block;
+  }
+  .ghost__lines { padding: 14px 12px; display: grid; gap: 9px; }
+  .ghost__lines span {
+    display: block;
+    height: 7px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.07);
+  }
+  .ghost__lines span:nth-child(1) { width: 62%; }
+  .ghost__lines span:nth-child(2) { width: 88%; }
+  .ghost__lines span:nth-child(3) { width: 74%; }
+  .ghost__lines span:nth-child(4) { width: 40%; }
+
+  .stage__desk { position: relative; }
+
+  .docked {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 2;
+  }
+  @media (max-width: 620px) {
+    .docked { transform: scale(.66); transform-origin: top right; }
+  }
+
+  .stage__callout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+  .stage__callout b { font-weight: 500; color: var(--color-text); }
+
+  .rule-dim {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--color-text-subtle);
+    pointer-events: none;
+  }
+
+  /* ---------- the overlay itself (1:1) ---------- */
+  .panel {
+    position: relative;
+    background: var(--color-panel);
+    color: var(--color-panel-text);
+    box-shadow: 0 22px 48px -28px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.12);
+    overflow: hidden;
+    flex: none;
+  }
+  .panel--mini { width: 158px; height: 38px; border-radius: var(--radius-lg); }
+  .panel--md   { width: 376px; height: 58px; border-radius: 14px; }
+  .panel--lg   { width: 440px; height: 148px; border-radius: var(--radius-xl); }
+
+  .pbtn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--color-panel-text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .pbtn:hover { background: rgba(255,255,255,.09); }
+  .pbtn:focus-visible { outline: 1px solid var(--color-primary); outline-offset: 1px; }
+  .pbtn--accent { color: var(--color-primary); }
+  .pbtn--muted { color: var(--color-panel-muted); }
+  .pbtn svg { width: 100%; height: 100%; display: block; }
+
+  .ptitle, .partist, .palbum, .ptime {
+    position: absolute;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ptitle { font-size: 12px; font-weight: 600; color: var(--color-panel-text); }
+  .partist { font-size: 11px; color: var(--color-panel-muted); }
+  .palbum { font-size: 10px; color: var(--color-panel-muted); }
+  .ptime { font-family: var(--mono); font-size: var(--text-panel-time); color: var(--color-panel-muted); }
+
+  .pbar {
+    position: absolute;
+    background: var(--color-panel-track);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .pbar i {
+    display: block;
+    height: 100%;
+    background: var(--color-primary);
+  }
+  .pcover {
+    position: absolute;
+    border-radius: var(--radius-md);
+    /* capa de Meteora (fonte: 600x600 do catálogo do iTunes), reduzida para 176 px e embutida */
+    background:
+      url("data:image/jpeg;base64,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") center / cover no-repeat,
+      linear-gradient(148deg, var(--color-surface) 0%, var(--color-background) 100%);
+    overflow: hidden;
+  }
+  .pcover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 40% at 50% 108%, rgba(255,255,255,.16), transparent 70%);
+  }
+
+  /* mini positions */
+  .panel--mini .pbtn--prev { left: 5px;  top: 5px;  width: 26px; height: 26px; }
+  .panel--mini .pbtn--play { left: 34px; top: 4px;  width: 30px; height: 30px; }
+  .panel--mini .pbtn--next { left: 66px; top: 5px;  width: 26px; height: 26px; }
+  .panel--mini .pbtn--cfg  { left: 96px; top: 5px;  width: 24px; height: 24px; }
+  .panel--mini .pbtn--x    { left: 124px; top: 5px; width: 24px; height: 24px; }
+
+  /* medium positions */
+  .panel--md .pbtn--prev { left: 10px; top: 13px; width: 32px; height: 32px; }
+  .panel--md .pbtn--play { left: 48px; top: 11px; width: 36px; height: 36px; }
+  .panel--md .pbtn--next { left: 92px; top: 13px; width: 32px; height: 32px; }
+  .panel--md .pbtn--cfg  { left: 334px; top: 4px; width: 22px; height: 22px; }
+  .panel--md .pbtn--x    { left: 352px; top: 4px; width: 22px; height: 22px; }
+  .panel--md .ptitle  { left: 132px; top: 9px;  width: 190px; }
+  .panel--md .partist { left: 132px; top: 29px; width: 190px; }
+
+  /* large positions */
+  .panel--lg .pbtn--prev { left: 114px; top: 106px; width: 30px; height: 30px; }
+  .panel--lg .pbtn--play { left: 146px; top: 103px; width: 34px; height: 34px; }
+  .panel--lg .pbtn--next { left: 186px; top: 106px; width: 30px; height: 30px; }
+  .panel--lg .pbtn--cfg  { left: 396px; top: 6px; width: 22px; height: 22px; }
+  .panel--lg .pbtn--x    { left: 412px; top: 6px; width: 22px; height: 22px; }
+  .panel--lg .pcover { left: 14px; top: 14px; width: 88px; height: 88px; }
+  .panel--lg .ptitle  { left: 114px; top: 11px; width: 312px; font-size: var(--text-panel-title); }
+  .panel--lg .partist { left: 114px; top: 37px; width: 312px; font-size: var(--text-panel-artist); }
+  .panel--lg .palbum  { left: 114px; top: 55px; width: 300px; }
+  .panel--lg .pbar    { left: 114px; top: 80px; width: 312px; height: 4px; }
+  .panel--lg .ptime   { left: 114px; top: 87px; width: 200px; }
+
+  /* ---------- sections ---------- */
+  section { scroll-margin-top: 76px; }
+
+  .band {
+    position: relative;
+    padding-block: clamp(38px, 5vw, 62px);
+  }
+  .band::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--edge);
+    right: var(--edge);
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  .band__head {
+    display: grid;
+    gap: 10px 40px;
+    margin-bottom: clamp(22px, 3vw, 34px);
+  }
+  @media (min-width: 860px) {
+    .band__head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+  }
+  h2 {
+    font-family: var(--display);
+    font-size: clamp(26px, 3.2vw, var(--text-display-md));
+    line-height: 1.06;
+    font-weight: 600;
+    margin: 0;
+    max-width: 22ch;
+  }
+  .band__note {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 15.5px;
+    max-width: 52ch;
+  }
+
+  /* sizes */
+  .sizes { display: grid; gap: 0; border-top: var(--rule); }
+  .size {
+    display: grid;
+    gap: 14px 34px;
+    padding-block: 26px;
+    border-bottom: var(--rule);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .size { grid-template-columns: 150px minmax(0, 1fr); align-items: start; }
+  }
+  .size__meta { display: grid; gap: 4px; }
+  .size__name {
+    font-family: var(--display);
+    font-size: var(--text-display-sm);
+    font-weight: 600;
+    margin: 0;
+  }
+  .size__dim {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+  .size__desc { margin: 0; color: var(--color-text-muted); font-size: 15px; max-width: 44ch; }
+  .size__stage {
+    display: grid;
+    grid-template-columns: 440px minmax(0, 1fr);
+    gap: 12px 28px;
+    align-items: start;
+    overflow-x: auto;
+    padding-block: 6px;
+  }
+  @media (max-width: 899px) {
+    .size__stage { grid-template-columns: minmax(0, 1fr); }
+  }
+  .size__scale {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--color-text-subtle);
+    white-space: nowrap;
+  }
+
+  .sizes__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-block: 14px;
+    border-bottom: var(--rule);
+  }
+  .sizes__toolbar p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--color-text-muted);
+    margin-right: auto;
+  }
+  [data-zoom="160"] .panel { zoom: 1.6; }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .seg button {
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    padding: 9px 14px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+  }
+  .seg button[aria-pressed="true"] { background: var(--color-text); color: var(--color-background-raised); }
+  .seg button:focus-visible { outline: 2px solid var(--color-accent-soft); outline-offset: -2px; }
+
+  /* commands */
+  .cmds {
+    display: grid;
+    gap: clamp(24px, 3vw, 40px);
+  }
+  @media (min-width: 980px) {
+    .cmds { grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); align-items: start; }
+  }
+
+  .table-wrap { overflow-x: auto; border-top: var(--rule); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 460px;
+  }
+  caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+    padding: 12px 0 10px;
+  }
+  th, td {
+    text-align: left;
+    padding: 11px 14px 11px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    vertical-align: top;
+  }
+  th {
+    font-weight: 600;
+    font-size: var(--text-mono-sm);
+    color: var(--color-text-subtle);
+    letter-spacing: .02em;
+    font-family: var(--mono);
+    font-weight: 400;
+  }
+  td code {
+    font-family: var(--mono);
+    font-size: var(--text-mono-sm);
+    background: rgba(255,255,255,.08);
+    border-radius: 4px;
+    padding: 2px 5px;
+    white-space: nowrap;
+  }
+  td:last-child, th:last-child { padding-right: 0; }
+  .kbd {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .kbd span {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--color-surface);
+    padding: 2px 6px;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  .settings-mock { display: grid; gap: 12px; justify-items: start; }
+  .settings {
+    border: 1px solid var(--color-border);
+    width: 360px;
+    max-width: 100%;
+    background: var(--color-panel);
+    border-radius: var(--radius-md);
+    padding: 14px 16px 16px;
+    color: var(--color-panel-text);
+    font-size: 12px;
+    box-shadow: 0 14px 30px -18px rgba(0,0,0,.6);
+    display: grid;
+    gap: 10px;
+  }
+  .settings__row {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+  .settings__row > span { color: var(--color-panel-text); }
+  .field {
+    background: var(--color-panel-hover);
+    border: 1px solid var(--color-panel-track);
+    border-radius: 4px;
+    padding: 5px 7px;
+    color: var(--color-panel-text);
+    font-family: var(--body);
+    font-size: 11.5px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .field--combo::after {
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid var(--color-panel-muted);
+    margin-top: 5px;
+    flex: none;
+  }
+  .check { display: flex; align-items: center; gap: 7px; color: var(--color-panel-text); }
+  .check-log {
+    margin: 2px 0 0;
+    color: var(--color-panel-muted);
+    font-size: var(--text-panel-album);
+    font-family: var(--mono);
+  }
+  .check i {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    border: 1px solid var(--color-panel-muted);
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+  }
+  .check i.on { background: var(--color-primary); border-color: var(--color-primary); }
+  .check i.on::after {
+    content: "";
+    width: 5px;
+    height: 3px;
+    border-left: 1.5px solid var(--color-on-primary);
+    border-bottom: 1.5px solid var(--color-on-primary);
+    transform: rotate(-45deg) translateY(-1px);
+  }
+  .settings__foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 2px; }
+  .settings__btn {
+    font-size: 11.5px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background: var(--color-panel-hover);
+    color: var(--color-panel-text);
+    border: 1px solid var(--color-panel-track);
+  }
+  .settings__btn--primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); font-weight: 600; }
+  .settings-note {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--color-text-subtle);
+    max-width: 40ch;
+    margin: 0;
+  }
+
+  /* how it works */
+  .chain {
+    display: grid;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  @media (min-width: 820px) {
+    .chain { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  }
+  .chain__step {
+    padding: 20px 22px 22px;
+    border: var(--rule);
+    border-left: 0;
+    background: var(--color-background-raised);
+  }
+  .chain__step:first-child { border-left: var(--rule); }
+  @media (max-width: 819px) {
+    .chain__step { border-left: var(--rule); }
+    .chain__step + .chain__step { border-top: 0; }
+  }
+  .chain__step h3 {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .chain__step p { margin: 0; font-size: 14px; color: var(--color-text-muted); }
+  .chain__tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--color-text-subtle);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  /* limits */
+  .limits {
+    display: grid;
+    gap: 0 clamp(24px, 3vw, 44px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 760px) {
+    .limits { grid-template-columns: 1fr 1fr; }
+  }
+  .limits li {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 12px;
+    padding-block: 16px;
+    border-bottom: 1px solid var(--color-border-soft);
+    font-size: 15px;
+    color: var(--color-text-muted);
+  }
+  .limits b { color: var(--color-text); font-weight: 600; }
+  .limits li::before {
+    content: "×";
+    font-family: var(--mono);
+    color: var(--color-text-subtle);
+    line-height: 1.5;
+  }
+
+  /* open */
+  .open {
+    display: grid;
+    gap: clamp(20px, 3vw, 40px);
+    align-items: start;
+  }
+  @media (min-width: 940px) {
+    .open { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
+  }
+  pre {
+    margin: 0;
+    border: 1px solid var(--color-border-soft);
+    background: var(--color-code-background);
+    color: var(--color-text);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: var(--text-mono-sm);
+    line-height: 1.7;
+  }
+  pre .c { color: var(--color-text-subtle); }
+  pre .p { color: var(--color-accent-soft); }
+
+  .files {
+    font-family: var(--mono);
+    font-size: 12px;
+    border-top: var(--rule);
+  }
+  .files div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    color: var(--color-text-muted);
+  }
+  .files div span:last-child { color: var(--color-text-subtle); }
+
+  /* download */
+  .dl { display: grid; gap: 18px; }
+  .dl__row { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; }
+  .dl__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: var(--text-mono-sm);
+    color: var(--color-text-subtle);
+  }
+  .dl__meta li { display: flex; align-items: center; gap: 8px; }
+  .dl__meta li::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border: 1px solid var(--color-text-subtle);
+    border-radius: 50%;
+  }
+
+  .steps {
+    counter-reset: s;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+  }
+  .steps li {
+    position: relative;
+    padding-left: 38px;
+    font-size: 15px;
+    color: var(--color-text-muted);
+  }
+  .steps li::before {
+    counter-increment: s;
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+  }
+  .steps b { display: block; color: var(--color-text); font-weight: 600; margin-bottom: 2px; }
+  .steps p { margin: 0; }
+  .steps code, .fine code { font-family: var(--mono); font-size: var(--text-mono-sm); color: var(--color-text-muted); }
+
+  .hash {
+    display: block;
+    margin: 8px 0 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    word-break: break-all;
+    border: 1px solid var(--color-border-soft);
+    background: var(--color-background-raised);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+  }
+  .fine { margin: 10px 0 0; font-size: 13px; color: var(--color-text-subtle); }
+
+  details {
+    border-top: 1px solid var(--color-border-soft);
+    margin-top: 14px;
+    padding-top: 10px;
+  }
+  summary { cursor: pointer; font-size: 13px; color: var(--color-text-subtle); }
+  summary:hover { color: var(--color-text-muted); }
+
+  footer {
+    border-top: var(--rule);
+    padding-block: 26px 40px;
+    font-size: 13px;
+    color: var(--color-text-subtle);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    justify-content: space-between;
+  }
+  footer code { font-family: var(--mono); font-size: 12px; color: var(--color-text-muted); }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translate(-50%, 12px);
+    background: var(--color-text);
+    color: var(--color-background);
+    font-size: 13.5px;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 40;
+  }
+  .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap bar__inner">
+    <a class="brand" href="#top">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3.4 2.2c0-.7.8-1.1 1.4-.7l7.9 5.1c.5.4.5 1.1 0 1.5l-7.9 5.1c-.6.4-1.4 0-1.4-.7z"/></svg>
+      </span>
+      Spotify Overlay
+    </a>
+    <nav class="bar__nav" aria-label="Seções">
+      <a href="#tamanhos">Tamanhos</a>
+      <a href="#comandos">Comandos</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#baixar">Baixar</a>
+    </nav>
+    <a class="btn btn--sm bar__cta" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay.exe">Baixar</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <div class="wrap hero">
+    <div class="hero__grid">
+      <div>
+        <p class="eyebrow">Utilitário local · Windows e macOS · sem instalação</p>
+        <h1>Um canto da tela<br>só para o <em>Spotify</em>.</h1>
+        <p class="lede">
+          Um painel de <strong>158 × 38 px</strong> que fica sempre no topo: próxima faixa,
+          play e voltar sem sair da janela em que você está. Fala com o Spotify (ou Spotifast) pelo
+          próprio sistema — <strong>sem login, sem API, sem Premium</strong> e sem terminal.
+        </p>
+        <div class="hero__actions">
+          <a class="btn" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay.exe">Baixar para Windows</a>
+          <a class="btn btn--ghost" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay-macOS.zip">Baixar para macOS</a>
+        </div>
+        <p class="fine">Windows e macOS v1.2.0 · Rust + Tauri · Win 10/11 e macOS 13+</p>
+        <ul class="specs">
+          <li>1 executável nativo</li>
+          <li>3 tamanhos</li>
+          <li>3 atalhos globais</li>
+          <li>Sem serviço ou instalador</li>
+        </ul>
+      </div>
+
+      <div class="stage" aria-label="O painel no canto superior direito da tela, com medidas">
+        <span class="stage__label">área de trabalho · 1920 × 1080</span>
+        <div class="ghost">
+          <div class="ghost__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="ghost__lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div class="docked">
+            <div class="panel panel--lg" role="img" aria-label="Painel grande: capa do álbum, título, artista, álbum, barra de progresso, tempo e controles">
+              <div class="pcover" aria-hidden="true"></div>
+              <div class="ptitle">Numb</div>
+              <div class="partist">Linkin Park</div>
+              <div class="palbum">Meteora</div>
+              <div class="pbar" aria-hidden="true"><i style="width:8%"></i></div>
+              <div class="ptime">0:14 / 2:55</div>
+              <button class="pbtn pbtn--prev" type="button" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20 9 12l10-8z"/><path d="M5 19V5"/></svg>
+              </button>
+              <button class="pbtn pbtn--play pbtn--accent" type="button" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+              </button>
+              <button class="pbtn pbtn--next" type="button" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>
+              </button>
+              <button class="pbtn pbtn--cfg pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                  <g stroke-width="2.5" transform="translate(12 12) scale(0.68) translate(-12 -12)">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  </g>
+                </svg>
+              </button>
+              <button class="pbtn pbtn--x pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.4 6.4l9.2 9.2M15.6 6.4l-9.2 9.2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="stage__callout">
+          <span><b>440 × 148 px</b> no modo grande</span>
+          <span>encostado a <b>24 px</b> das bordas</span>
+          <span>sempre acima das outras janelas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="wrap band" id="tamanhos">
+    <div class="band__head">
+      <h2>Três tamanhos, desenhados em pixels reais</h2>
+      <p class="band__note">
+        Cada painel abaixo está em escala 1:1 — o que você vê é o tamanho que ele ocupa na
+        tela. A troca é feita nas configurações ou no menu de contexto da própria janela.
+      </p>
+    </div>
+
+    <div class="sizes__toolbar">
+      <p>Escala de exibição dos painéis</p>
+      <div class="seg" role="group" aria-label="Escala de exibição">
+        <button type="button" data-zoom-to="100" aria-pressed="true">1:1</button>
+        <button type="button" data-zoom-to="160" aria-pressed="false">1,6×</button>
+      </div>
+    </div>
+
+    <div class="sizes" id="sizes-root">
+      <article class="size">
+        <div class="size__meta">
+          <h3 class="size__name">Mini</h3>
+          <p class="size__dim">158 × 38 px</p>
+        </div>
+        <div class="size__stage">
+          <div class="panel panel--mini" role="img" aria-label="Painel mini com cinco botões">
+            <button class="pbtn pbtn--prev" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20 9 12l10-8z"/><path d="M5 19V5"/></svg>
+            </button>
+            <button class="pbtn pbtn--play pbtn--accent" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            </button>
+            <button class="pbtn pbtn--next" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>
+            </button>
+            <button class="pbtn pbtn--cfg pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <g stroke-width="2.5" transform="translate(12 12) scale(0.68) translate(-12 -12)">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                </g>
+              </svg>
+            </button>
+            <button class="pbtn pbtn--x pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7l10 10M17 7L7 17"/></svg>
+            </button>
+          </div>
+          <div class="size__desc-wrap">
+            <p class="size__desc" style="margin-bottom:6px">Só os controles. Fica no canto sem cobrir conteúdo.</p>
+            <p class="size__scale">anterior · play/pause · próxima · configurações · fechar</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="size">
+        <div class="size__meta">
+          <h3 class="size__name">Médio</h3>
+          <p class="size__dim">376 × 58 px</p>
+        </div>
+        <div class="size__stage">
+          <div class="panel panel--md" role="img" aria-label="Painel médio com controles, título e artista">
+            <button class="pbtn pbtn--prev" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20 9 12l10-8z"/><path d="M5 19V5"/></svg>
+            </button>
+            <button class="pbtn pbtn--play pbtn--accent" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            </button>
+            <button class="pbtn pbtn--next" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>
+            </button>
+            <div class="ptitle">Numb</div>
+            <div class="partist">Linkin Park</div>
+            <button class="pbtn pbtn--cfg pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <g stroke-width="2.5" transform="translate(12 12) scale(0.68) translate(-12 -12)">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                </g>
+              </svg>
+            </button>
+            <button class="pbtn pbtn--x pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.4 6.4l9.2 9.2M15.6 6.4l-9.2 9.2"/></svg>
+            </button>
+          </div>
+          <div>
+            <p class="size__desc" style="margin-bottom:6px">Acrescenta faixa e artista em duas linhas, com corte por reticências.</p>
+            <p class="size__scale">os mesmos 5 botões, 218 px mais largo</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="size">
+        <div class="size__meta">
+          <h3 class="size__name">Grande</h3>
+          <p class="size__dim">440 × 148 px</p>
+        </div>
+        <div class="size__stage">
+          <div class="panel panel--lg" role="img" aria-label="Painel grande com capa, título, artista, álbum, barra de progresso e tempos">
+            <div class="pcover" aria-hidden="true"></div>
+            <div class="ptitle">Numb</div>
+            <div class="partist">Linkin Park</div>
+            <div class="palbum">Meteora</div>
+            <div class="pbar" aria-hidden="true"><i style="width:8%"></i></div>
+            <div class="ptime">0:14 / 2:55</div>
+            <button class="pbtn pbtn--prev" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20 9 12l10-8z"/><path d="M5 19V5"/></svg>
+            </button>
+            <button class="pbtn pbtn--play pbtn--accent" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            </button>
+            <button class="pbtn pbtn--next" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>
+            </button>
+            <button class="pbtn pbtn--cfg pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <g stroke-width="2.5" transform="translate(12 12) scale(0.68) translate(-12 -12)">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                </g>
+              </svg>
+            </button>
+            <button class="pbtn pbtn--x pbtn--muted" type="button" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.4 6.4l9.2 9.2M15.6 6.4l-9.2 9.2"/></svg>
+            </button>
+          </div>
+          <div>
+            <p class="size__desc" style="margin-bottom:6px">
+              Capa do álbum, álbum, barra de progresso e tempo decorrido/total. A capa vem do
+              próprio Windows e é recortada quando o Spotify anexa a tarja da marca.
+            </p>
+            <p class="size__scale">capa 88 × 88 · barra 312 × 4 · tempos em fonte mono</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap band" id="comandos">
+    <div class="band__head">
+      <h2>Todos os comandos</h2>
+      <p class="band__note">
+        Três atalhos globais funcionam com qualquer janela em foco. Clique em
+        <strong>Gravar</strong> e pressione a combinação para trocar: o campo é preenchido
+        sozinho. O resto é mouse: clique, arraste e botão direito. Nada é fixo — tudo isso
+        está em <code style="font-family:var(--mono);font-size:13px">config.json</code>.
+      </p>
+    </div>
+
+    <div class="cmds">
+      <div>
+        <div class="table-wrap">
+          <table>
+            <caption>Atalhos globais</caption>
+            <thead>
+              <tr><th scope="col">Combinação</th><th scope="col">Faz</th><th scope="col">Onde mudar</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="kbd"><span>Ctrl</span><span>Alt</span><span>→</span></span></td>
+                <td>Pula para a próxima faixa</td>
+                <td><code>hotkeySkip</code></td>
+              </tr>
+              <tr>
+                <td><span class="kbd"><span>Ctrl</span><span>Alt</span><span>←</span></span></td>
+                <td>Volta para a faixa anterior</td>
+                <td><code>hotkeyPrev</code></td>
+              </tr>
+              <tr>
+                <td><span class="kbd"><span>Ctrl</span><span>Alt</span><span>H</span></span></td>
+                <td>Mostra ou esconde o painel</td>
+                <td><code>hotkeyToggle</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap" style="margin-top:26px">
+          <table>
+            <caption>Mouse e janela</caption>
+            <thead>
+              <tr><th scope="col">Ação</th><th scope="col">Resultado</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Clique nos ícones</td><td>anterior, play/pause, próxima, configurações, fechar</td></tr>
+              <tr><td>Arrastar o painel</td><td>move; a posição vira <code>custom</code> e é salva</td></tr>
+              <tr><td>Botão direito</td><td>menu: sempre no topo, tamanho, configurações, esconder, sair</td></tr>
+              <tr><td>Ícone na bandeja</td><td>clique alterna mostrar/esconder; menu com sair</td></tr>
+              <tr><td>X do painel</td><td>esconde para a bandeja (o app continua rodando)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap" style="margin-top:26px">
+          <table>
+            <caption>config.json — todas as chaves</caption>
+            <thead>
+              <tr><th scope="col">Chave</th><th scope="col">Valores</th><th scope="col">Função</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>size</code></td><td><code>mini</code> · <code>medium</code> · <code>large</code></td><td>tamanho do painel</td></tr>
+              <tr><td><code>position</code></td><td><code>top-right</code> · <code>top-left</code> · <code>bottom-right</code> · <code>bottom-left</code> · <code>custom</code></td><td>canto da tela; <code>custom</code> usa X/Y salvos</td></tr>
+              <tr><td><code>customX</code> / <code>customY</code></td><td>pixels</td><td>posição livre quando <code>position</code> é <code>custom</code></td></tr>
+              <tr><td><code>hotkeySkip</code></td><td>ex.: <code>Ctrl+Alt+Right</code></td><td>atalho de próxima faixa; vazio desativa</td></tr>
+              <tr><td><code>hotkeyPrev</code></td><td>ex.: <code>Ctrl+Alt+Left</code></td><td>atalho de faixa anterior; vazio desativa</td></tr>
+              <tr><td><code>hotkeyToggle</code></td><td>ex.: <code>Ctrl+Alt+H</code></td><td>atalho de mostrar/esconder; vazio desativa</td></tr>
+              <tr><td><code>alwaysOnTop</code></td><td><code>true</code> · <code>false</code></td><td>mantém acima das outras janelas</td></tr>
+              <tr><td><code>closeHidesToTray</code></td><td><code>true</code> · <code>false</code></td><td>o X esconde em vez de encerrar</td></tr>
+              <tr><td><code>startWithWindows</code></td><td><code>true</code> · <code>false</code></td><td>atalho na pasta Inicializar; desligado por padrão</td></tr>
+              <tr><td><code>player</code></td><td><code>auto</code> · <code>spotify</code> · <code>spotifast</code></td><td>player controlado; <code>auto</code> prefere quem está tocando</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap" style="margin-top:26px">
+          <table>
+            <caption>Formato aceito nos atalhos</caption>
+            <thead>
+              <tr><th scope="col">Parte</th><th scope="col">Aceita</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Modificadores</td><td><code>Ctrl</code> · <code>Alt</code> · <code>Shift</code> · <code>Win</code>, combináveis com <code>+</code></td></tr>
+              <tr><td>Teclas nomeadas</td><td><code>Left</code> <code>Right</code> <code>Up</code> <code>Down</code> <code>Space</code> <code>Enter</code> <code>Tab</code> <code>Esc</code> <code>Home</code> <code>End</code> <code>PgUp</code> <code>PgDn</code> <code>F1</code>…<code>F12</code></td></tr>
+              <tr><td>Teclas de mídia</td><td><code>MediaNextTrack</code> · <code>MediaPrevTrack</code> · <code>MediaPlayPause</code></td></tr>
+              <tr><td>Letras e números</td><td>um caractere só, ex.: <code>Ctrl+Shift+N</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="settings-mock">
+        <p class="eyebrow" style="margin-bottom:0">A tela onde tudo isso é ajustado</p>
+        <div class="settings" role="img" aria-label="Janela de configurações do app">
+          <div class="settings__row">
+            <span>Tamanho</span>
+            <span class="field field--combo">Grande (capa + álbum)</span>
+          </div>
+          <div class="settings__row">
+            <span>Posição na tela</span>
+            <span class="field field--combo">Canto superior direito</span>
+          </div>
+          <div class="settings__row">
+            <span>Atalho pular música</span>
+            <span class="field">Ctrl+Alt+Right</span>
+          </div>
+          <div class="settings__row">
+            <span>Atalho voltar faixa</span>
+            <span class="field">Ctrl+Alt+Left</span>
+          </div>
+          <div class="settings__row">
+            <span>Atalho mostrar/esconder</span>
+            <span class="field">Ctrl+Alt+H</span>
+          </div>
+          <div class="check"><i class="on"></i> Sempre no topo</div>
+          <div class="check"><i class="on"></i> X esconde para a bandeja</div>
+          <div class="check"><i></i> Iniciar com o Windows</div>
+          <p class="check-log">pular: ok &nbsp;|&nbsp; mostrar: ok</p>
+          <div class="settings__foot">
+            <span class="settings__btn">Cancelar</span>
+            <span class="settings__btn settings__btn--primary">Salvar</span>
+          </div>
+        </div>
+        <p class="settings-note">
+          Aberta pela engrenagem do painel, pelo botão direito ou pelo menu da bandeja. Salvar
+          aplica na hora, sem reiniciar.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap band" id="como-funciona">
+    <div class="band__head">
+      <h2>Nada de login porque o Windows já sabe o que está tocando</h2>
+      <p class="band__note">
+        O app não conversa com o Spotify. Ele lê e comanda a API de mídia do próprio Windows —
+        a mesma que aparece no volume da barra de tarefas e nas teclas de mídia do teclado.
+      </p>
+    </div>
+
+    <div class="chain">
+      <div class="chain__step">
+        <span class="chain__tag">01 · origem</span>
+        <h3>Spotify ou Spotifast</h3>
+        <p>Precisa do Spotify desktop ou do Spotifast instalado e tocando. O player web não publica sessão de mídia no Windows.</p>
+      </div>
+      <div class="chain__step">
+        <span class="chain__tag">02 · intermediário</span>
+        <h3>SMTC do Windows</h3>
+        <p>Expõe título, artista, álbum, capa, posição da faixa e os comandos anterior/play/próxima.</p>
+      </div>
+      <div class="chain__step">
+        <span class="chain__tag">03 · painel</span>
+        <h3>Seu painel</h3>
+        <p>Uma thread lê o estado e outra desenha a janela de 158 px. Nenhum token, nenhuma conta conectada.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap band" id="limites">
+    <div class="band__head">
+      <h2>O que ele não faz</h2>
+      <p class="band__note">
+        Ferramenta pequena tem limite claro. Estes são os de hoje, medidos nesta máquina.
+      </p>
+    </div>
+    <ul class="limits">
+      <li><div><b>Não mostra a próxima faixa.</b> O SMTC entrega título, artista, álbum, capa e tempo — mas não a fila. Mostrar “a seguir” exigiria a Web API do Spotify, com OAuth e conta Premium.</div></li>
+      <li><div><b>Não controla o player web.</b> Só players que publicam sessão SMTC aparecem: Spotify desktop e Spotifast.</div></li>
+      <li><div><b>Não tem busca, playlist nem volume.</b> É controle de faixa, não um cliente de música.</div></li>
+      <li><div><b>Ocupa ~130 MB de memória.</b> Medido com o painel aberto: um processo nativo em Rust mais o WebView2 do sistema, sem PowerShell e sem subprocessos.</div></li>
+      <li><div><b>O ícone pode cair no “^” da bandeja.</b> O Windows 10 esconde ícones novos; arraste para a área visível uma vez. Até lá, o atalho de mostrar/esconder resolve.</div></li>
+      <li><div><b>Uma instância só.</b> Abrir de novo não duplica o painel; a segunda execução sai sozinha.</div></li>
+    </ul>
+  </section>
+
+  <section class="wrap band" id="baixar">
+    <div class="band__head">
+      <h2>Baixar</h2>
+      <p class="band__note">
+        Um arquivo de ~3 MB no Windows: baixou, deu duplo clique, o painel apareceu. Sem
+        instalador, sem serviço, sem terminal e sem nada para configurar antes.
+      </p>
+    </div>
+
+    <div class="open">
+      <div class="dl">
+        <p class="eyebrow" style="margin:0">Windows · .exe</p>
+        <div class="dl__row">
+          <a class="btn" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay.exe">Baixar para Windows</a>
+          <a class="btn btn--ghost btn--sm" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay.zip">Prefiro o .zip (35 KB)</a>
+        </div>
+        <ul class="dl__meta">
+          <li>versão 1.2.0</li>
+          <li>~3 MB</li>
+          <li>Windows 10 ou 11</li>
+        </ul>
+
+        <ol class="steps">
+          <li>
+            <b>Baixe o executável</b>
+            <p><code>SpotifyOverlay.exe</code> roda de qualquer pasta, inclusive a de Downloads. O zip é só uma alternativa com o mesmo exe mais o <code>README.txt</code>.</p>
+          </li>
+          <li>
+            <b>Duplo clique</b>
+            <p>O painel aparece no canto superior direito e o ícone vai para a bandeja. O <code>config.json</code> é criado ao lado do executável.</p>
+          </li>
+          <li>
+            <b>Se o Windows avisar</b>
+            <p>“O Windows protegeu o computador” aparece porque o exe não tem assinatura de código: clique em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>. O app não abre conexão de rede — só conversa com a API de mídia do próprio Windows.</p>
+          </li>
+          <li>
+            <b>Deixe o Spotify ou Spotifast tocando</b>
+            <p>O app lê a sessão de mídia do Windows (SMTC) e usa o WebView2 que já vem no Windows 10/11. O player web não publica sessão; o Spotifast publica, então funciona igual ao Spotify desktop.</p>
+          </li>
+        </ol>
+      </div>
+
+      <div>
+        <p class="eyebrow" style="margin-top:0">Confira o arquivo</p>
+        <p class="fine" style="margin:0 0 10px">SHA-256 do <code>.exe</code> publicado. Para conferir no Windows:</p>
+        <pre><span class="c">certutil -hashfile SpotifyOverlay.exe SHA256</span></pre>
+        <p class="fine">
+          O arquivo <code>SpotifyOverlay.exe.sha256</code> acompanha cada release.
+        </p>
+
+        <p class="eyebrow" style="margin-top:26px">No disco</p>
+        <div class="files">
+          <div><span>SpotifyOverlay.exe</span><span>~3 MB</span></div>
+          <div><span>config.json</span><span>0,3 KB</span></div>
+          <div><span>total</span><span>~3 MB</span></div>
+        </div>
+        <p class="fine">
+          Só o exe e o config que ele cria ao lado. Nenhuma entrada no registro: o início
+          com o Windows, se você marcar, é um atalho na pasta Inicializar.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap band" id="baixar-macos">
+    <div class="band__head">
+      <h2>Baixar para macOS</h2>
+      <p class="band__note">
+        App em Rust + Tauri, universal (Apple Silicon e Intel), 1,4 MB no zip. Controla
+        Spotify e Spotifast; os três atalhos são graváveis pressionando as teclas nas
+        Configurações. Fora da Mac App Store e sem assinatura Developer ID, então o Gatekeeper
+        pede um clique extra na primeira abertura.
+      </p>
+    </div>
+
+    <div class="open">
+      <div class="dl">
+        <p class="eyebrow" style="margin:0">macOS · .app universal</p>
+        <div class="dl__row">
+          <a class="btn" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay-macOS.zip">Baixar para macOS</a>
+          <a class="btn btn--ghost btn--sm" href="https://github.com/joaovili/spotify-overlay">código-fonte</a>
+        </div>
+        <ul class="dl__meta">
+          <li>versão 1.2.0</li>
+          <li>1,4 MB</li>
+          <li>macOS 13 ou superior</li>
+          <li>arm64 + x86_64</li>
+        </ul>
+
+        <ol class="steps">
+          <li>
+            <b>Arraste para Aplicativos</b>
+            <p>O zip traz <code>Spotify Overlay.app</code>. Descompacte e mova para <code>/Applications</code>.</p>
+          </li>
+          <li>
+            <b>Abra uma vez e libere no Gatekeeper</b>
+            <p>O aviso aparece porque o app não é notarizado. Abra <strong>Ajustes do Sistema &gt; Privacidade e Segurança</strong> e clique em <strong>Abrir Mesmo Assim</strong>. Desde o macOS Sequoia não existe mais o “botão direito &gt; Abrir”.</p>
+          </li>
+          <li>
+            <b>Autorize o controle do Spotify</b>
+            <p>O macOS pergunta se o app pode controlar o Spotify (Automação). Sem isso o painel abre, mas não lê a faixa. O caminho de correção fica em Ajustes &gt; Privacidade e Segurança &gt; Automação. Com o Spotifast, o overlay usa a CLI local e não pede Automação.</p>
+          </li>
+          <li>
+            <b>Pronto: painel no canto, ícone na barra de menus</b>
+            <p>Mesmos três tamanhos, mesmos atalhos e o mesmo <code>config.json</code> da versão Windows, em <code>~/Library/Application Support/SpotifyOverlay</code>. Escolha o player em Configurações &gt; Player ou na chave <code>player</code> (<code>auto</code>, <code>spotify</code> ou <code>spotifast</code>); no <code>auto</code>, o overlay usa quem está tocando.</p>
+          </li>
+        </ol>
+      </div>
+
+      <div>
+        <p class="eyebrow" style="margin-top:0">Confira o arquivo</p>
+        <p class="fine" style="margin:0 0 10px">SHA-256 do <code>.zip</code> publicado. Para conferir no macOS:</p>
+        <pre><span class="c">shasum -a 256 SpotifyOverlay-macOS.zip</span></pre>
+        <p class="fine">
+          O arquivo <code>SpotifyOverlay-macOS.zip.sha256</code> acompanha a release.
+        </p>
+
+        <p class="eyebrow" style="margin-top:26px">Diferenças em relação ao Windows</p>
+        <ul class="limits">
+          <li><div><b>A permissão é pedida de novo a cada atualização.</b> A assinatura é ad-hoc, então o macOS trata cada build como um app diferente.</div></li>
+          <li><div><b>A capa usa a rede.</b> O Spotify entrega a arte como URL; o app baixa só de <code>i.scdn.co</code> e guarda em cache de até 50 MB.</div></li>
+          <li><div><b>Sem fila e sem Spotify Connect.</b> O AppleScript do app não expõe a fila nem controla outros dispositivos.</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer>
+      <span>Spotify Overlay — utilitário local para Windows e macOS. Não é afiliado ao Spotify.</span>
+      <span>
+        <a href="https://github.com/joaovili/spotify-overlay">Windows</a>
+        · <a href="https://github.com/joaovili/spotify-overlay">macOS</a>
+        · <a href="https://github.com/joaovili/spotify-overlay/releases/latest">Windows 1.2.0</a>
+        · <a href="https://github.com/joaovili/spotify-overlay/releases/latest">macOS 1.2.0</a>
+      </span>
+    </footer>
+  </div>
+</main>
+
+
+<script>
+  (function () {
+    var root = document.getElementById('sizes-root');
+    var segButtons = document.querySelectorAll('[data-zoom-to]');
+    segButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        root.setAttribute('data-zoom', btn.getAttribute('data-zoom-to'));
+        segButtons.forEach(function (other) {
+          other.setAttribute('aria-pressed', String(other === btn));
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

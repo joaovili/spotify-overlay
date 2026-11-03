@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spotify Overlay</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="panel" class="panel" data-size="medium">
+      <img id="cover" class="cover" alt="" draggable="false" />
+      <div id="title" class="text title"></div>
+      <div id="artist" class="text artist"></div>
+      <div id="album" class="text album"></div>
+      <div id="progress" class="progress"><div id="fill" class="fill"></div></div>
+      <div id="time" class="time"></div>
+
+      <button class="btn prev transport" data-control="previous" title="Faixa anterior" aria-label="Faixa anterior">
+        <svg viewBox="0 0 24 24"><path d="M19 20 9 12l10-8v16z"/><path d="M5 19V5"/></svg>
+      </button>
+      <button class="btn play" data-control="toggle" title="Reproduzir/Pausar" aria-label="Reproduzir ou pausar">
+        <svg class="icon-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></svg>
+        <svg class="icon-pause" viewBox="0 0 24 24"><path d="M7 4v16M17 4v16" stroke-width="3"/></svg>
+      </button>
+      <button class="btn next transport" data-control="next" title="Proxima faixa" aria-label="Proxima faixa">
+        <svg viewBox="0 0 24 24"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg>
+      </button>
+      <button class="btn settings" data-action="settings" title="Configuracoes" aria-label="Configuracoes">
+        <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="btn close" data-action="hide" title="Esconder" aria-label="Esconder">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <script src="overlay.js"></script>
+  </body>
+</html>

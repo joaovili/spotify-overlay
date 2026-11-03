@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/media", "src-tauri"]
+
+[workspace.package]
+version = "1.2.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.77"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+spotify-overlay-core = { path = "crates/core" }
+spotify-overlay-media = { path = "crates/media" }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true

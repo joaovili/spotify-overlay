@@ -9,7 +9,7 @@ topo, mostra o que esta tocando e troca de faixa sem tirar o foco do app em uso.
 - Tres tamanhos: mini (158x38), medio (376x58) e grande (440x148).
 - Atalhos globais, bandeja/menu bar, tres posicoes nos cantos, arrastar e config.json.
 
-Versao atual: **1.2.0**.
+Versao atual: **1.2.1**.
 
 ## Baixar
 

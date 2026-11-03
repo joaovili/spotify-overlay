@@ -3,8 +3,8 @@ use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2::AllocAnyThread;
 use objc2_foundation::{
-    NSAppleScript, NSAppleScriptErrorMessage, NSAppleScriptErrorNumber, NSDictionary, NSNumber,
-    NSString,
+    NSAppleScript, NSAppleScriptErrorMessage, NSAppleScriptErrorNumber, NSAutoreleasePool,
+    NSDictionary, NSNumber, NSString,
 };
 use spotify_overlay_core::{spotifast, MediaCommand, TrackSnapshot};
 use std::io::Read;
@@ -83,6 +83,10 @@ impl AppleScript {
     }
 
     fn execute(&self) -> Result<String, String> {
+        // O worker nao e uma thread do GCD: sem um pool, os objetos autoreleased
+        // do NSAppleScript vazariam a cada poll.
+        let _pool = unsafe { NSAutoreleasePool::new() };
+
         let Some(script) = &self.script else {
             return Err(SCRIPT_UNAVAILABLE.into());
         };

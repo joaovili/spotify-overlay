@@ -3340,7 +3340,7 @@ dependencies = [
 
 [[package]]
 name = "spotify-overlay"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "objc2",
  "objc2-app-kit",
@@ -3358,7 +3358,7 @@ dependencies = [
 
 [[package]]
 name = "spotify-overlay-core"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -3366,7 +3366,7 @@ dependencies = [
 
 [[package]]
 name = "spotify-overlay-media"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "base64 0.22.1",
  "objc2",

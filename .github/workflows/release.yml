@@ -13,22 +13,17 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "."
-      - run: npm ci
-      - name: Build universal app
-        run: npm run build -- --target universal-apple-darwin --bundles app
+      - name: Build app bundle
+        run: bash scripts/package-macos.sh universal
       - name: Package
         run: |
-          ditto -c -k --keepParent "target/universal-apple-darwin/release/bundle/macos/Spotify Overlay.app" SpotifyOverlay-macOS.zip
+          ditto -c -k --keepParent "dist/Spotify Overlay.app" SpotifyOverlay-macOS.zip
           shasum -a 256 SpotifyOverlay-macOS.zip | awk '{print $1}' > SpotifyOverlay-macOS.zip.sha256
       - uses: actions/upload-artifact@v4
         with:
@@ -42,23 +37,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "."
-      - run: npm ci
-      - name: Build portable exe
-        run: npm run build -- --no-bundle
+      - name: Build
+        run: cargo build --release
       - name: Package
         shell: pwsh
         run: |
           $exe = "target\release\spotify-overlay.exe"
           if (-not (Test-Path $exe)) { throw "exe nao encontrado" }
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item $exe .\SpotifyOverlay.exe
           (Get-FileHash .\SpotifyOverlay.exe -Algorithm SHA256).Hash.ToLower() | Out-File .\SpotifyOverlay.exe.sha256 -Encoding ascii -NoNewline
           Compress-Archive -Path .\SpotifyOverlay.exe -DestinationPath .\SpotifyOverlay.zip -Force

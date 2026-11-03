@@ -53,7 +53,7 @@ impl TrackSnapshot {
 }
 
 /// Payload enviado a interface. A posicao ja vem extrapolada pelo clock.
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NowPlaying {
     pub title: String,

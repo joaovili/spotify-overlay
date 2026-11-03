@@ -964,7 +964,7 @@
           <a class="btn" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay.exe">Baixar para Windows</a>
           <a class="btn btn--ghost" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay-macOS.zip">Baixar para macOS</a>
         </div>
-        <p class="fine">Windows e macOS v1.2.1 · Rust + Tauri · Win 10/11 e macOS 13+</p>
+        <p class="fine">Windows e macOS v2.0.0 · Rust nativo · Win 10/11 e macOS 13+</p>
         <ul class="specs">
           <li>1 executável nativo</li>
           <li>3 tamanhos</li>
@@ -1325,7 +1325,7 @@
       <li><div><b>Não mostra a próxima faixa.</b> O SMTC entrega título, artista, álbum, capa e tempo — mas não a fila. Mostrar “a seguir” exigiria a Web API do Spotify, com OAuth e conta Premium.</div></li>
       <li><div><b>Não controla o player web.</b> Só players que publicam sessão SMTC aparecem: Spotify desktop e Spotifast.</div></li>
       <li><div><b>Não tem busca, playlist nem volume.</b> É controle de faixa, não um cliente de música.</div></li>
-      <li><div><b>Ocupa ~130 MB de memória.</b> Medido com o painel aberto: um processo nativo em Rust mais o WebView2 do sistema, sem PowerShell e sem subprocessos.</div></li>
+      <li><div><b>Memória baixa para um app com UI própria.</b> Um único processo nativo em Rust, sem WebView e sem subprocessos.</div></li>
       <li><div><b>O ícone pode cair no “^” da bandeja.</b> O Windows 10 esconde ícones novos; arraste para a área visível uma vez. Até lá, o atalho de mostrar/esconder resolve.</div></li>
       <li><div><b>Uma instância só.</b> Abrir de novo não duplica o painel; a segunda execução sai sozinha.</div></li>
     </ul>
@@ -1335,7 +1335,7 @@
     <div class="band__head">
       <h2>Baixar</h2>
       <p class="band__note">
-        Um arquivo de ~3 MB no Windows: baixou, deu duplo clique, o painel apareceu. Sem
+        Um arquivo de ~5 MB no Windows: baixou, deu duplo clique, o painel apareceu. Sem
         instalador, sem serviço, sem terminal e sem nada para configurar antes.
       </p>
     </div>
@@ -1348,8 +1348,8 @@
           <a class="btn btn--ghost btn--sm" href="https://github.com/joaovili/spotify-overlay/releases/latest/download/SpotifyOverlay.zip">Prefiro o .zip (35 KB)</a>
         </div>
         <ul class="dl__meta">
-          <li>versão 1.2.1</li>
-          <li>~3 MB</li>
+          <li>versão 2.0.0</li>
+          <li>~5 MB</li>
           <li>Windows 10 ou 11</li>
         </ul>
 
@@ -1368,7 +1368,7 @@
           </li>
           <li>
             <b>Deixe o Spotify ou Spotifast tocando</b>
-            <p>O app lê a sessão de mídia do Windows (SMTC) e usa o WebView2 que já vem no Windows 10/11. O player web não publica sessão; o Spotifast publica, então funciona igual ao Spotify desktop.</p>
+            <p>O app lê a sessão de mídia do Windows (SMTC) e desenha direto no OpenGL do sistema, sem WebView. O player web não publica sessão; o Spotifast publica, então funciona igual ao Spotify desktop.</p>
           </li>
         </ol>
       </div>
@@ -1383,9 +1383,9 @@
 
         <p class="eyebrow" style="margin-top:26px">No disco</p>
         <div class="files">
-          <div><span>SpotifyOverlay.exe</span><span>~3 MB</span></div>
+          <div><span>SpotifyOverlay.exe</span><span>~5 MB</span></div>
           <div><span>config.json</span><span>0,3 KB</span></div>
-          <div><span>total</span><span>~3 MB</span></div>
+          <div><span>total</span><span>~5 MB</span></div>
         </div>
         <p class="fine">
           Só o exe e o config que ele cria ao lado. O início com o Windows, se você marcar,
@@ -1400,7 +1400,7 @@
     <div class="band__head">
       <h2>Baixar para macOS</h2>
       <p class="band__note">
-        App em Rust + Tauri, universal (Apple Silicon e Intel), ~3 MB no zip. Controla
+        App em Rust nativo (egui), universal (Apple Silicon e Intel), ~4 MB no zip. Controla
         Spotify e Spotifast; os três atalhos são graváveis pressionando as teclas nas
         Configurações. Fora da Mac App Store e sem assinatura Developer ID, então o Gatekeeper
         pede um clique extra na primeira abertura.
@@ -1415,8 +1415,8 @@
           <a class="btn btn--ghost btn--sm" href="https://github.com/joaovili/spotify-overlay">código-fonte</a>
         </div>
         <ul class="dl__meta">
-          <li>versão 1.2.1</li>
-          <li>~3 MB</li>
+          <li>versão 2.0.0</li>
+          <li>~4 MB</li>
           <li>macOS 13 ou superior</li>
           <li>arm64 + x86_64</li>
         </ul>
@@ -1452,7 +1452,7 @@
         <p class="eyebrow" style="margin-top:26px">Diferenças em relação ao Windows</p>
         <ul class="limits">
           <li><div><b>A permissão é pedida de novo a cada atualização.</b> A assinatura é ad-hoc, então o macOS trata cada build como um app diferente.</div></li>
-          <li><div><b>A capa usa a rede.</b> O Spotify entrega a arte como URL e o WebView do sistema carrega a imagem só de <code>i.scdn.co</code>.</div></li>
+          <li><div><b>A capa usa a rede.</b> O Spotify entrega a arte como URL e o app baixa a imagem só de <code>i.scdn.co</code> em segundo plano.</div></li>
           <li><div><b>Sem fila e sem Spotify Connect.</b> O AppleScript do app não expõe a fila nem controla outros dispositivos.</div></li>
         </ul>
       </div>
@@ -1465,8 +1465,8 @@
       <span>
         <a href="https://github.com/joaovili/spotify-overlay">Windows</a>
         · <a href="https://github.com/joaovili/spotify-overlay">macOS</a>
-        · <a href="https://github.com/joaovili/spotify-overlay/releases/latest">Windows 1.2.1</a>
-        · <a href="https://github.com/joaovili/spotify-overlay/releases/latest">macOS 1.2.1</a>
+        · <a href="https://github.com/joaovili/spotify-overlay/releases/latest">Windows 2.0.0</a>
+        · <a href="https://github.com/joaovili/spotify-overlay/releases/latest">macOS 2.0.0</a>
       </span>
     </footer>
   </div>

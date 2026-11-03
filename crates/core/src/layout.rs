@@ -86,6 +86,94 @@ impl Rect {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ButtonKind {
+    Previous,
+    PlayPause,
+    Next,
+    Settings,
+    Close,
+}
+
+/// Medidas do painel em pixels logicos, com origem no topo-esquerda.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Metrics {
+    pub width: f64,
+    pub height: f64,
+    pub corner_radius: f64,
+    pub buttons: [(ButtonKind, Rect); 5],
+    pub title: Option<Rect>,
+    pub artist: Option<Rect>,
+    pub album: Option<Rect>,
+    pub time_label: Option<Rect>,
+    pub progress: Option<Rect>,
+    pub cover: Option<Rect>,
+}
+
+pub fn metrics(size: OverlaySize) -> Metrics {
+    let rect = Rect::new;
+    let buttons = |values: [(ButtonKind, f64, f64, f64, f64); 5]| {
+        values.map(|(kind, x, y, width, height)| (kind, rect(x, y, width, height)))
+    };
+
+    match size {
+        OverlaySize::Mini => Metrics {
+            width: 158.0,
+            height: 38.0,
+            corner_radius: 10.0,
+            buttons: buttons([
+                (ButtonKind::Previous, 5.0, 5.0, 26.0, 26.0),
+                (ButtonKind::PlayPause, 34.0, 4.0, 30.0, 30.0),
+                (ButtonKind::Next, 66.0, 5.0, 26.0, 26.0),
+                (ButtonKind::Settings, 96.0, 7.0, 24.0, 24.0),
+                (ButtonKind::Close, 124.0, 7.0, 24.0, 24.0),
+            ]),
+            title: None,
+            artist: None,
+            album: None,
+            time_label: None,
+            progress: None,
+            cover: None,
+        },
+        OverlaySize::Medium => Metrics {
+            width: 376.0,
+            height: 58.0,
+            corner_radius: 14.0,
+            buttons: buttons([
+                (ButtonKind::Previous, 10.0, 13.0, 32.0, 32.0),
+                (ButtonKind::PlayPause, 48.0, 11.0, 36.0, 36.0),
+                (ButtonKind::Next, 92.0, 13.0, 32.0, 32.0),
+                (ButtonKind::Settings, 314.0, 17.0, 24.0, 24.0),
+                (ButtonKind::Close, 342.0, 17.0, 24.0, 24.0),
+            ]),
+            title: Some(rect(132.0, 9.0, 176.0, 20.0)),
+            artist: Some(rect(132.0, 29.0, 176.0, 18.0)),
+            album: None,
+            time_label: None,
+            progress: None,
+            cover: None,
+        },
+        OverlaySize::Large => Metrics {
+            width: 440.0,
+            height: 148.0,
+            corner_radius: 16.0,
+            buttons: buttons([
+                (ButtonKind::Previous, 114.0, 106.0, 30.0, 30.0),
+                (ButtonKind::PlayPause, 146.0, 103.0, 34.0, 34.0),
+                (ButtonKind::Next, 186.0, 106.0, 30.0, 30.0),
+                (ButtonKind::Settings, 378.0, 10.0, 24.0, 24.0),
+                (ButtonKind::Close, 406.0, 10.0, 24.0, 24.0),
+            ]),
+            title: Some(rect(114.0, 8.0, 256.0, 24.0)),
+            artist: Some(rect(114.0, 34.0, 256.0, 18.0)),
+            album: Some(rect(114.0, 54.0, 256.0, 16.0)),
+            time_label: Some(rect(114.0, 86.0, 200.0, 14.0)),
+            progress: Some(rect(114.0, 80.0, 312.0, 4.0)),
+            cover: Some(rect(14.0, 14.0, 88.0, 88.0)),
+        },
+    }
+}
+
 pub const MARGIN: f64 = 24.0;
 
 /// Posicao do painel em coordenadas de tela com origem no topo-esquerda.

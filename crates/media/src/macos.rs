@@ -66,7 +66,7 @@ struct Config {
 }
 
 /// NSAppleScript executa no proprio processo: sem `osascript`, sem subprocesso por
-/// poll e o pedido de Automacao aparece no nome do app. O worker do Tauri cria e usa
+/// poll e o pedido de Automacao aparece no nome do app. O worker da UI cria e usa
 /// este objeto sempre no mesmo thread.
 struct AppleScript {
     script: Option<Retained<NSAppleScript>>,

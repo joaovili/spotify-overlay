@@ -13,7 +13,7 @@ use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 const PROPERTIES_TTL: Duration = Duration::from_secs(15);
 
 /// Deixa o painel fora do Alt+Tab e sem roubar foco ao receber clique
-/// (WS_EX_TOOLWINDOW + WS_EX_NOACTIVATE), como na versao WinForms.
+/// (WS_EX_TOOLWINDOW + WS_EX_NOACTIVATE), como na versao nativa antiga.
 pub fn apply_overlay_window_style(hwnd: isize) {
     use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::WindowsAndMessaging::{

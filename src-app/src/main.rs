@@ -1,18 +1,19 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod app;
-mod commands;
+mod artwork;
+mod autostart;
+mod draw;
 mod hotkeys;
-mod menu;
+mod instance;
 mod platform;
-mod state;
+mod screenshot;
+mod settings;
 mod tray;
-mod window;
 mod worker;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-
     if args.iter().any(|arg| arg == "--version") {
         println!("Spotify Overlay {}", env!("CARGO_PKG_VERSION"));
         return;

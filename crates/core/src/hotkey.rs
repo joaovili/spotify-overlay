@@ -46,7 +46,7 @@ pub enum Key {
 }
 
 impl Key {
-    /// Nome de `Code` usado pelo parser de aceleradores do Tauri.
+    /// Nome de `Code` usado pelo parser de aceleradores do global-hotkey.
     pub fn code(self) -> String {
         match self {
             Self::Char(c) if c.is_ascii_alphabetic() => format!("Key{}", c.to_ascii_uppercase()),

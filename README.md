@@ -3,13 +3,14 @@
 Painel flutuante para controlar o Spotify no **macOS** e no **Windows**. Fica sempre no
 topo, mostra o que esta tocando e troca de faixa sem tirar o foco do app em uso.
 
+- **Rust nativo com egui/OpenGL**: sem Electron, sem WebView, sem conta Premium e sem API web.
 - **macOS**: Spotify via AppleScript ou Spotifast via CLI local.
 - **Windows**: sessao SMTC do Windows (Spotify desktop ou Spotifast).
-- **Sem login, sem token, sem conta Premium e sem API web.**
 - Tres tamanhos: mini (158x38), medio (376x58) e grande (440x148).
-- Atalhos globais, bandeja/menu bar, tres posicoes nos cantos, arrastar e config.json.
+- Atalhos globais, bandeja/menu bar, tres posicoes nos cantos, arrastar e `config.json`.
+- O mesmo `config.json` das versoes anteriores, no mesmo caminho.
 
-Versao atual: **1.2.1**.
+Versao atual: **2.0.0**.
 
 ## Baixar
 
@@ -19,45 +20,65 @@ Versao atual: **1.2.1**.
 O app nao e assinado. No macOS, libere em **Ajustes do Sistema > Privacidade e
 Seguranca**. No Windows, use **Mais informacoes > Executar assim mesmo**.
 
-## Como este repositorio esta organizado
+## Estrutura
 
 ```
 crates/core      config, layout, relogio de reproducao, atalhos e textos (Rust puro, testado)
 crates/media     backends dos players: AppleScript/Spotifast (macOS) e SMTC (Windows)
-src-tauri        shell Tauri: janela, bandeja, atalhos globais, autostart, single-instance
-ui               overlay e configuracoes em HTML/CSS/JS puro (sem framework)
+src-app          app nativo eframe/egui: janela, tray, atalhos, autostart, single-instance
+assets           icones e Info.plist do bundle macOS
 landing          landing page publicada no GitHub Pages
-scripts          geracao dos icones
+scripts          empacotamento do .app
 ```
 
-O mesmo binario Tauri atende as duas plataformas: o backend de midia e escolhido em tempo
-de compilacao e a interface e a mesma. O resultado fica pequeno (~3 MB por plataforma)
-e usa o WebView do sistema.
+O codigo e o mesmo nas duas plataformas; o binario e compilado por plataforma e o backend
+de midia e escolhido em tempo de compilacao. O macOS usa um `NSPanel` nao ativante e o Windows usa
+`WS_EX_NOACTIVATE`/`WS_EX_TOOLWINDOW`, entao clicar no painel nao muda o foco.
 
 ## Desenvolvimento
 
-Requisitos: Rust stable, Node 20+, macOS 13+ ou Windows 10/11.
+Requisitos: Rust stable, macOS 13+ ou Windows 10/11.
 
 ```bash
-npm install
-npm run dev                      # roda o app em modo dev
-npm run build                    # gera o bundle da plataforma atual
-cargo test                       # testes do core e do backend de midia
-cargo run -- --selftest-core     # checagens rapidas sem GUI
-cargo run -- --dump-player       # imprime o estado lido do player
+cargo run                        # roda o app
 cargo run -- --settings          # abre direto nas configuracoes
+cargo run -- --dump-player       # imprime o estado lido do player
+cargo run -- --selftest-core     # checagens rapidas sem GUI
+cargo test                       # testes do core e do backend de midia
+cargo build --release
 ```
 
-Para gerar os icones novamente:
+Ferramentas de desenvolvimento de UI (nao usadas em producao):
 
 ```bash
-swift scripts/IconGen.swift build/Icon.iconset
-npx tauri icon build/Icon.iconset/icon_512x512@2x.png
+cargo run -- --screenshot /tmp/overlay.png
+cargo run -- --settings-screenshot /tmp/settings.png
 ```
+
+## Empacotar
+
+### macOS
+
+```bash
+bash scripts/package-macos.sh native      # arm64 desta maquina
+bash scripts/package-macos.sh universal   # arm64 + x86_64 (release)
+```
+
+O app sai em `dist/Spotify Overlay.app`, com `LSUIElement`, `NSAppleEventsUsageDescription`
+e o icone.
+
+### Windows
+
+```bash
+cargo build --release
+```
+
+O exe portatil fica em `target\release\spotify-overlay.exe`; o icone e a versao sao
+embutidos pelo `build.rs`.
 
 ## Configuracao
 
-O arquivo fica em `~/Library/Application Support/SpotifyOverlay/config.json` no macOS e em
+`~/Library/Application Support/SpotifyOverlay/config.json` no macOS e
 `%APPDATA%\SpotifyOverlay\config.json` no Windows (ou ao lado do `.exe`, quando a pasta e
 gravavel). As chaves sao as mesmas das versoes anteriores:
 
@@ -88,21 +109,29 @@ gravavel). As chaves sao as mesmas das versoes anteriores:
 
 ### macOS
 
-- Le e controla o Spotify pelo dicionario AppleScript do app. Na primeira vez o macOS pede
-  permissao de **Automacao**.
+- `NSAppleScript` roda no proprio processo (sem `osascript` por poll) e o macOS pede
+  permissao de **Automacao** na primeira leitura.
 - Com `player=spotifast`, usa `Spotifast now-playing --raw` e os verbos `next`,
   `previous` e `play-pause`.
-- A capa vem de `i.scdn.co`; a interface carrega a imagem direto no WebView.
-- A janela e um `NSPanel` nao ativante, entao clicar no painel nao muda o app em foco.
-- O icone fica na barra de menus; o app nao aparece no Dock.
+- A capa vem de `i.scdn.co`; o download/decodificacao roda em segundo plano.
+- `NSPanel` nao ativante, nivel flutuante e presenca em todos os espacos.
+- Icone na barra de menus; o app nao aparece no Dock.
 
 ### Windows
 
-- Usa `GlobalSystemMediaTransportControlsSessionManager` (SMTC). Nao precisa de .NET,
-  PowerShell, login ou subprocessos.
-- A janela usa `WS_EX_NOACTIVATE` e `WS_EX_TOOLWINDOW`: nao rouba foco e nao entra no
-  Alt+Tab.
-- O WebView2 ja vem no Windows 10/11.
+- Usa `GlobalSystemMediaTransportControlsSessionManager` (SMTC). Sem .NET, PowerShell,
+  login ou subprocessos.
+- `WS_EX_NOACTIVATE` + `WS_EX_TOOLWINDOW`: nao rouba foco e nao entra no Alt+Tab.
+- Desenha direto no OpenGL do sistema (egui/glow), sem WebView.
+
+## Desempenho (macOS, release arm64)
+
+- Binario: ~4 MB; `.app`: ~4 MB; zip universal: ~4 MB.
+- RSS em idle com o painel aberto: ~90 MB.
+- A versao Tauri/WebView media ~135 MB; a Swift/AppKit antiga, ~25 MB.
+
+O objetivo foi sair do WebView mantendo uma UI nativa em Rust. Se o requisito for o menor
+RSS possivel, o proximo passo seria desenhar com CoreGraphics em vez de egui/OpenGL.
 
 ## Release
 
@@ -114,7 +143,7 @@ Tags `v*` disparam o workflow que compila macOS universal e Windows, publica
 
 As versoes Swift/AppKit, C#/WinForms e a landing antiga foram arquivadas em
 `joaovili/spotify-overlay-macos`, `joaovili/spotify-overlay-windows` e
-`joaovili/spotify-overlay-landing`. O codigo deste repositorio e uma reescrita em Rust/Tauri.
+`joaovili/spotify-overlay-landing`.
 
 ## Licenca
 

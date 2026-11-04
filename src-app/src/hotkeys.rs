@@ -1,13 +1,20 @@
 use global_hotkey::hotkey::HotKey;
 use global_hotkey::{GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use spotify_overlay_core::hotkey::parse_optional;
-use spotify_overlay_core::{Config, MediaCommand};
+use spotify_overlay_core::Config;
 use std::collections::HashMap;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HotkeyAction {
+    Previous,
+    Next,
+    ToggleVisibility,
+}
 
 pub struct Hotkeys {
     manager: Option<GlobalHotKeyManager>,
     registered: Vec<HotKey>,
-    map: HashMap<u32, MediaCommand>,
+    map: HashMap<u32, HotkeyAction>,
     capturing: bool,
 }
 
@@ -88,7 +95,7 @@ impl Hotkeys {
         let _ = self.register(config);
     }
 
-    pub fn poll(&mut self) -> Option<MediaCommand> {
+    pub fn poll(&mut self) -> Option<HotkeyAction> {
         while let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
             if event.state() == HotKeyState::Pressed {
                 if let Some(command) = self.map.get(&event.id()) {
@@ -100,10 +107,10 @@ impl Hotkeys {
     }
 }
 
-fn bindings(config: &Config) -> [(String, MediaCommand); 3] {
+fn bindings(config: &Config) -> [(String, HotkeyAction); 3] {
     [
-        (config.hotkey_skip.clone(), MediaCommand::Next),
-        (config.hotkey_prev.clone(), MediaCommand::Previous),
-        (config.hotkey_toggle.clone(), MediaCommand::Toggle),
+        (config.hotkey_skip.clone(), HotkeyAction::Next),
+        (config.hotkey_prev.clone(), HotkeyAction::Previous),
+        (config.hotkey_toggle.clone(), HotkeyAction::ToggleVisibility),
     ]
 }

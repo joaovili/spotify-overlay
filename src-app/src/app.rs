@@ -1,7 +1,7 @@
 use crate::artwork::Artwork;
 use crate::autostart::Autostart;
 use crate::draw::{self, Action};
-use crate::hotkeys::Hotkeys;
+use crate::hotkeys::{HotkeyAction, Hotkeys};
 use crate::platform;
 use crate::settings;
 use crate::tray;
@@ -160,6 +160,7 @@ impl OverlayApp {
         self.worker
             .visible
             .store(visible, std::sync::atomic::Ordering::Relaxed);
+        ctx.send_viewport_cmd(egui::ViewportCommand::Visible(visible));
         if let Some(window) = window {
             if visible {
                 platform::show(window);
@@ -378,8 +379,25 @@ impl eframe::App for OverlayApp {
                 self.set_visible(window.as_deref(), visible, &ctx);
             }
         }
-        if let Some(command) = self.hotkeys.poll() {
-            self.worker.tx.send(WorkerMsg::Control(command)).ok();
+        if let Some(action) = self.hotkeys.poll() {
+            match action {
+                HotkeyAction::ToggleVisibility => {
+                    let visible = !self.visible;
+                    self.set_visible(window.as_deref(), visible, &ctx);
+                }
+                HotkeyAction::Previous => {
+                    self.worker
+                        .tx
+                        .send(WorkerMsg::Control(MediaCommand::Previous))
+                        .ok();
+                }
+                HotkeyAction::Next => {
+                    self.worker
+                        .tx
+                        .send(WorkerMsg::Control(MediaCommand::Next))
+                        .ok();
+                }
+            }
         }
 
         if let Some(window) = &window {

@@ -139,12 +139,6 @@ Tags `v*` disparam o workflow que compila macOS universal e Windows, publica
 `SpotifyOverlay-macOS.zip`, `SpotifyOverlay.exe`, `SpotifyOverlay.zip` e os arquivos
 `.sha256`. A landing e publicada pelo GitHub Pages a partir de `landing/`.
 
-## Repositorios antigos
-
-As versoes Swift/AppKit, C#/WinForms e a landing antiga foram arquivadas em
-`joaovili/spotify-overlay-macos`, `joaovili/spotify-overlay-windows` e
-`joaovili/spotify-overlay-landing`.
-
 ## Licenca
 
 MIT. Nao afiliado ao Spotify.

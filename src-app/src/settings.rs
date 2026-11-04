@@ -70,7 +70,8 @@ pub fn viewport() -> egui::ViewportBuilder {
 }
 
 pub fn show(ui: &mut egui::Ui, state: &Arc<Mutex<SettingsState>>, tx: &Arc<Mutex<Sender<Event>>>) {
-    if !state.lock().unwrap().focused {
+    let focused = state.lock().unwrap().focused;
+    if !focused {
         state.lock().unwrap().focused = true;
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Focus);
     }
@@ -136,87 +137,109 @@ pub fn show(ui: &mut egui::Ui, state: &Arc<Mutex<SettingsState>>, tx: &Arc<Mutex
                         .spacing([12.0, 8.0])
                         .show(ui, |ui| {
                             ui.label("Tamanho");
+                            let size = state.lock().unwrap().config.size.clone();
+                            let mut selected_size = size.clone();
                             egui::ComboBox::from_id_salt("size")
-                                .selected_text(size_label(&state.lock().unwrap().config.size))
+                                .selected_text(size_label(&size))
                                 .show_ui(ui, |ui| {
-                                    let mut current = state.lock().unwrap().config.size.clone();
-                                    ui.selectable_value(&mut current, "mini".into(), "Mini");
-                                    ui.selectable_value(&mut current, "medium".into(), "Médio");
-                                    ui.selectable_value(&mut current, "large".into(), "Grande");
-                                    state.lock().unwrap().config.size = current;
+                                    ui.selectable_value(&mut selected_size, "mini".into(), "Mini");
+                                    ui.selectable_value(
+                                        &mut selected_size,
+                                        "medium".into(),
+                                        "Médio",
+                                    );
+                                    ui.selectable_value(
+                                        &mut selected_size,
+                                        "large".into(),
+                                        "Grande",
+                                    );
                                 });
+                            if selected_size != size {
+                                state.lock().unwrap().config.size = selected_size;
+                            }
                             ui.end_row();
 
                             ui.label("Posição");
+                            let position = state.lock().unwrap().config.position.clone();
+                            let mut selected_position = position.clone();
                             egui::ComboBox::from_id_salt("position")
-                                .selected_text(position_label(
-                                    &state.lock().unwrap().config.position,
-                                ))
+                                .selected_text(position_label(&position))
                                 .show_ui(ui, |ui| {
-                                    let mut current = state.lock().unwrap().config.position.clone();
                                     ui.selectable_value(
-                                        &mut current,
+                                        &mut selected_position,
                                         "top-right".into(),
                                         "Superior direita",
                                     );
                                     ui.selectable_value(
-                                        &mut current,
+                                        &mut selected_position,
                                         "top-left".into(),
                                         "Superior esquerda",
                                     );
                                     ui.selectable_value(
-                                        &mut current,
+                                        &mut selected_position,
                                         "bottom-right".into(),
                                         "Inferior direita",
                                     );
                                     ui.selectable_value(
-                                        &mut current,
+                                        &mut selected_position,
                                         "bottom-left".into(),
                                         "Inferior esquerda",
                                     );
                                     ui.selectable_value(
-                                        &mut current,
+                                        &mut selected_position,
                                         "custom".into(),
                                         "Personalizada",
                                     );
-                                    state.lock().unwrap().config.position = current;
                                 });
+                            if selected_position != position {
+                                state.lock().unwrap().config.position = selected_position;
+                            }
                             ui.end_row();
 
                             let custom = state.lock().unwrap().config.position == "custom";
                             if custom {
                                 ui.label("Coordenadas");
+                                let (mut custom_x, mut custom_y) = {
+                                    let locked = state.lock().unwrap();
+                                    (locked.config.custom_x, locked.config.custom_y)
+                                };
                                 ui.horizontal(|ui| {
-                                    ui.add(
-                                        egui::DragValue::new(
-                                            &mut state.lock().unwrap().config.custom_x,
-                                        )
-                                        .speed(1.0),
-                                    );
-                                    ui.add(
-                                        egui::DragValue::new(
-                                            &mut state.lock().unwrap().config.custom_y,
-                                        )
-                                        .speed(1.0),
-                                    );
+                                    ui.add(egui::DragValue::new(&mut custom_x).speed(1.0));
+                                    ui.add(egui::DragValue::new(&mut custom_y).speed(1.0));
                                 });
+                                {
+                                    let mut locked = state.lock().unwrap();
+                                    locked.config.custom_x = custom_x;
+                                    locked.config.custom_y = custom_y;
+                                }
                                 ui.end_row();
                             }
 
                             ui.label("Player");
+                            let player = state.lock().unwrap().config.player.clone();
+                            let mut selected_player = player.clone();
                             egui::ComboBox::from_id_salt("player")
-                                .selected_text(player_label(&state.lock().unwrap().config.player))
+                                .selected_text(player_label(&player))
                                 .show_ui(ui, |ui| {
-                                    let mut current = state.lock().unwrap().config.player.clone();
-                                    ui.selectable_value(&mut current, "auto".into(), "Automático");
-                                    ui.selectable_value(&mut current, "spotify".into(), "Spotify");
                                     ui.selectable_value(
-                                        &mut current,
+                                        &mut selected_player,
+                                        "auto".into(),
+                                        "Automático",
+                                    );
+                                    ui.selectable_value(
+                                        &mut selected_player,
+                                        "spotify".into(),
+                                        "Spotify",
+                                    );
+                                    ui.selectable_value(
+                                        &mut selected_player,
                                         "spotifast".into(),
                                         "Spotifast",
                                     );
-                                    state.lock().unwrap().config.player = current;
                                 });
+                            if selected_player != player {
+                                state.lock().unwrap().config.player = selected_player;
+                            }
                             ui.end_row();
                         });
 
@@ -235,24 +258,29 @@ pub fn show(ui: &mut egui::Ui, state: &Arc<Mutex<SettingsState>>, tx: &Arc<Mutex
 
                     ui.add_space(10.0);
                     section(ui, "Comportamento");
+                    let (mut always_on_top, mut close_hides_to_tray, mut start_with_windows) = {
+                        let locked = state.lock().unwrap();
+                        (
+                            locked.config.always_on_top,
+                            locked.config.close_hides_to_tray,
+                            locked.config.start_with_windows,
+                        )
+                    };
+                    ui.checkbox(&mut always_on_top, "Sempre no topo");
                     ui.checkbox(
-                        &mut state.lock().unwrap().config.always_on_top,
-                        "Sempre no topo",
-                    );
-                    ui.checkbox(
-                        &mut state.lock().unwrap().config.close_hides_to_tray,
+                        &mut close_hides_to_tray,
                         "O botão fechar esconde para a bandeja",
                     );
                     #[cfg(target_os = "macos")]
-                    ui.checkbox(
-                        &mut state.lock().unwrap().config.start_with_windows,
-                        "Iniciar no login",
-                    );
+                    ui.checkbox(&mut start_with_windows, "Iniciar no login");
                     #[cfg(not(target_os = "macos"))]
-                    ui.checkbox(
-                        &mut state.lock().unwrap().config.start_with_windows,
-                        "Iniciar com o Windows",
-                    );
+                    ui.checkbox(&mut start_with_windows, "Iniciar com o Windows");
+                    {
+                        let mut locked = state.lock().unwrap();
+                        locked.config.always_on_top = always_on_top;
+                        locked.config.close_hides_to_tray = close_hides_to_tray;
+                        locked.config.start_with_windows = start_with_windows;
+                    }
 
                     let status = state.lock().unwrap().status.clone();
                     if !status.is_empty() {
